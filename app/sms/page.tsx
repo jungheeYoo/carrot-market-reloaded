@@ -34,3 +34,6 @@ export default function SMSLogin() {
     </div>
   );
 }
+
+// 4-0 ~ 4-3 인증 화면 UI (Authentication UI )
+// 5-0 ~ 5-4 form 처리 방법 (Server Actions)
