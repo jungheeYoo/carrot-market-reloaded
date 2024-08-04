@@ -25,7 +25,7 @@ export default function FormInput({
       />
       {errors.map((error, index) => (
         <span key={index} className="text-red-500 font-medium">
-          {errors}
+          {error}
         </span>
       ))}
     </div>
