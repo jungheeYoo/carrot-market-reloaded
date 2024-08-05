@@ -134,30 +134,86 @@
 // // 이건 FormData constructor 내부에서 오는 것
 // // 이름은 상관없고 타입은 FormData 이어야 함
 
+// //-----------------------------------------------------
+// // 5-2
+// // useFormStatus
+// // Server Action 경과와 UI가 서로 소통하는 방법
+
+// import FormButton from '@/components/form-btn';
+// import FormInput from '@/components/form-input';
+// import SocialLogin from '@/components/social-login';
+
+// // Create Account Screen
+// export default function Login() {
+//   // Server action
+//   async function handleForm(formData: FormData) {
+//     'use server';
+//     await new Promise((resolve) => setTimeout(resolve, 5000));
+//     console.log('logged in!');
+//   }
+//   return (
+//     <div className="flex flex-col gap-10 py-8 px-6">
+//       <div className="flex flex-col gap-2 *:font-medium">
+//         <h1 className="text-2xl">안녕하세요!</h1>
+//         <h2 className="text-xl">Log in with email and password.</h2>
+//       </div>
+//       <form action={handleForm} className="flex flex-col gap-3">
+//         <FormInput
+//           name="email"
+//           type="email"
+//           placeholder="Email"
+//           required
+//           errors={[]}
+//         />
+//         <FormInput
+//           name="password"
+//           type="password"
+//           placeholder="Password"
+//           required
+//           errors={[]}
+//         />
+//         <FormButton text="Log in" />
+//       </form>
+//       <SocialLogin />
+//     </div>
+//   );
+// }
+
 //-----------------------------------------------------
-// 5-2
-// useFormStatus
-// Server Action 경과와 UI가 서로 소통하는 방법
+// 5-3
+// useFormState
+// Server Action 의 결과를 UI로 전달하는 방법
+
+'use client';
 
 import FormButton from '@/components/form-btn';
 import FormInput from '@/components/form-input';
 import SocialLogin from '@/components/social-login';
+import { useFormState } from 'react-dom';
+import { handleForm } from './actions';
 
-// Create Account Screen
 export default function Login() {
-  // Server action
-  async function handleForm(formData: FormData) {
-    'use server';
-    await new Promise((resolve) => setTimeout(resolve, 5000));
-    console.log('logged in!');
-  }
+  // use server 옮겨줌
+
+  // 배열의 첫 번째 아이템은 state 가 됨
+  // 이 경우에, stat는 action의 return 값이 될 것임
+  // 두 번째 아이템은 action
+  // 이것은 handleForm 이 함수 action을 실행시킬 것임
+  // action을 useFormState로 넘겨주면
+  // useFormState hook은 action의 결과를 돌려 줌
+  const [state, action] = useFormState(handleForm, null);
   return (
     <div className="flex flex-col gap-10 py-8 px-6">
       <div className="flex flex-col gap-2 *:font-medium">
         <h1 className="text-2xl">안녕하세요!</h1>
         <h2 className="text-xl">Log in with email and password.</h2>
       </div>
-      <form action={handleForm} className="flex flex-col gap-3">
+      {/* 만약에 여기에 handleForm을 그대로 넣어버리면
+      useFormState을 쓰는 이유가 없다. 결과를 알 수 없다
+      대신 우리가 만든 action을 useFormState에게 넘겨주고
+      트리거를 받아서 action에 넘겨줌
+      */}
+      <form action={action} className="flex flex-col gap-3">
         <FormInput
           name="email"
           type="email"
@@ -170,7 +226,8 @@ export default function Login() {
           type="password"
           placeholder="Password"
           required
-          errors={[]}
+          // 에러가 존재하지 않는다면, 빈 배열을 반환
+          errors={state?.errors ?? []}
         />
         <FormButton text="Log in" />
       </form>
@@ -178,3 +235,5 @@ export default function Login() {
     </div>
   );
 }
+
+// action은 사용자를 다른 곳으로 redirect도 할 수 있다
