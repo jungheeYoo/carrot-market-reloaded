@@ -97,7 +97,7 @@
 // Refinement
 // 에러 메세지 커스터마이징
 // 각 필드의 고유한 validator 만드는 방법
-// 두 필드를 함께 검증하는 방법
+// 두 필드를 함께 검증하는 방법.
 
 'use server';
 import { z } from 'zod';
