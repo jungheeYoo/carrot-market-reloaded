@@ -342,3 +342,6 @@ export async function createAccount(prevState: any, formData: FormData) {
     console.log(result.data);
   }
 }
+
+// 반드시 result.data를 사용하고, data object는 다시 사용하면 안됨
+// 왜냐면 이건 invalid할 가능성이 있고, 아직 transform도 되지 않은 데이터이기 때문
