@@ -38,19 +38,52 @@
 // // 4-0 ~ 4-3 인증 화면 UI (Authentication UI )
 // // 5-0 ~ 5-4 form 처리 방법 (Server Actions)
 
+// //-----------------------------------------------------
+// // 6-6
+// // Log In Validation
+// 'use client';
+
+// import Button from '@/components/button';
+// import Input from '@/components/input';
+// import { useFormState } from 'react-dom';
+// import { smsVerification } from './actions';
+
+// // Create Account Screen
+// export default function SMSLogin() {
+//   const [state, dispatch] = useFormState(smsVerification, null);
+//   return (
+//     <div className="flex flex-col gap-10 py-8 px-6">
+//       <div className="flex flex-col gap-2 *:font-medium">
+//         <h1 className="text-2xl">SMS Login</h1>
+//         <h2 className="text-xl">Verify your phone number.</h2>
+//       </div>
+//       <form action={dispatch} className="flex flex-col gap-3">
+//         <Input name="phone" type="number" placeholder="Phone number" required />
+//         <Input
+//           name="token"
+//           type="number"
+//           placeholder="Verification code"
+//           required
+//         />
+//         <Button text="Verify" />
+//       </form>
+//     </div>
+//   );
+// }
+
 //-----------------------------------------------------
-// 6-6
-// Log In Validation
+// 6-7
+// Coerce
 'use client';
 
 import Button from '@/components/button';
 import Input from '@/components/input';
 import { useFormState } from 'react-dom';
-import { smsVerification } from './actions';
+import { smsLogin } from './actions';
 
 // Create Account Screen
 export default function SMSLogin() {
-  const [state, dispatch] = useFormState(smsVerification, null);
+  const [state, dispatch] = useFormState(smsLogin, null);
   return (
     <div className="flex flex-col gap-10 py-8 px-6">
       <div className="flex flex-col gap-2 *:font-medium">
@@ -58,12 +91,14 @@ export default function SMSLogin() {
         <h2 className="text-xl">Verify your phone number.</h2>
       </div>
       <form action={dispatch} className="flex flex-col gap-3">
-        <Input name="phone" type="number" placeholder="Phone number" required />
+        <Input name="phone" type="text" placeholder="Phone number" required />
         <Input
           name="token"
           type="number"
           placeholder="Verification code"
           required
+          min={100000}
+          max={999999}
         />
         <Button text="Verify" />
       </form>
