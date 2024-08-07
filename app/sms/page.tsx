@@ -4,8 +4,8 @@
 // 소셜 로그인 버튼 분리
 // 계정 생성 화면과 로그인 화면에서 모두 사용
 
-import FormButton from '@/components/form-btn';
-import FormInput from '@/components/form-input';
+import FormButton from '@/components/button';
+import FormInput from '@/components/input';
 import SocialLogin from '@/components/social-login';
 
 // Create Account Screen

@@ -174,17 +174,114 @@
 // // object를 만들어서 message를 넣은다음, zod에게 이 에러의 주인이 누군지 알려줌 path: ['cofirm_password'],
 // // 이제 zod가 이 refine을 실행할 때 메세지를 표시해야 하는 경우
 
+// //-----------------------------------------------------
+// // 6-3
+// // Transformation
+// // zod를 사용해서 데이터를 변환(transform) 하는 방법
+// // 예를 들면 유저가 대문자로 입력해도 모든 것을 소문자로 바꿔주는 것
+
+// 'use server';
+// import { z } from 'zod';
+
+// // 함수 따로 만듦
+// // 비밀번호 정규식 - 소문자, 대문자, 숫자, 특수문자
+// const passwordRegex = new RegExp(
+//   /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*?[#?!@$%^&*-]).+$/
+// );
+
+// const checkUsername = (username: string) => !username.includes('potato');
+
+// const checkPasswords = ({
+//   password,
+//   confirm_password,
+// }: {
+//   password: string;
+//   confirm_password: string;
+// }) => password === confirm_password;
+
+// const formSchema = z
+//   .object({
+//     username: z
+//       .string({
+//         invalid_type_error: 'Username must be a stirng',
+//         required_error: 'Where is my username???',
+//       })
+//       .min(3, 'Way too short!!!')
+//       //.max(10, 'That is too loooooog!')
+//       .toLowerCase()
+//       .trim()
+//       .transform((username) => `🔥 ${username} 🔥`)
+//       /*
+//       이렇게 변함
+//       {
+//         username: '🔥 dddd. 🔥',
+//         email: 'aaaa@gmail.com',
+//         password: '1Aa^',
+//         confirm_password: '1Aa^'
+//       }
+//       */
+//       .refine(checkUsername, 'No potatoes allowed'),
+//     email: z.string().email().toLowerCase(),
+//     password: z
+//       .string()
+//       .min(4)
+//       .regex(
+//         passwordRegex,
+//         'Passwords must contain at least one UPPERCASE, lowercase, number and special characters.'
+//       ),
+//     confirm_password: z.string().min(4),
+//   })
+//   .refine(checkPasswords, {
+//     message: 'Both passwords should be the same!',
+//     path: ['confirm_password'],
+//   });
+
+// export async function createAccount(prevState: any, formData: FormData) {
+//   const data = {
+//     username: formData.get('username'),
+//     email: formData.get('email'),
+//     password: formData.get('password'),
+//     confirm_password: formData.get('confirm_password'),
+//   };
+
+//   // safeParse
+//   const result = formSchema.safeParse(data);
+//   if (!result.success) {
+//     console.log(result.error.flatten());
+
+//     return result.error.flatten();
+//   } else {
+//     console.log(result.data);
+//   }
+// }
+
+// // zod는 데이터를 검증하는 것 뿐만 아니라 변환하는 것도 가능
+
+// // .toLowerCase()
+// // 유저가 대문자로 입력해도 모든 것을 소문자로 바꿔주는 것
+
+// // .trim()
+// // 유저가 시작과 끝에 공백을 넣었을 때 string 앞 뒤에 붙은 공백을 제거해줌.
+
+// // .transform
+// // 커스텀할 수 있음
+// // 이 함수는 refine 함수와 동일하게 작동함
+// // 이 함수는 반드시 무언가를 return 해야 함
+
+// // refine은 네가 refine하려는 대상을 넘겨줌
+// // validation의 성공 여부에 따라 true or false를 return 하면 됨
+// // transform 역시 네가 transform 하려는 대상을 넘겨줌
+// // 여기서는 true or false가 아니라 변환된 값을 return 하면 됨
+
 //-----------------------------------------------------
-// 6-3
-// Transformation
-// zod를 사용해서 데이터를 변환(transform) 하는 방법
-// 예를 들면 유저가 대문자로 입력해도 모든 것을 소문자로 바꿔주는 것
+// 6-4
+// Refactor
+// FormInput 리팩토링
 
 'use server';
 import { z } from 'zod';
 
 // 함수 따로 만듦
-// 비밀번호 정규식 - 소문자, 대문자, 숫자, 특수문자
 const passwordRegex = new RegExp(
   /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*?[#?!@$%^&*-]).+$/
 );
@@ -207,19 +304,10 @@ const formSchema = z
         required_error: 'Where is my username???',
       })
       .min(3, 'Way too short!!!')
-      //.max(10, 'That is too loooooog!')
+      .max(10, 'That is too loooooog!')
       .toLowerCase()
       .trim()
       .transform((username) => `🔥 ${username} 🔥`)
-      /* 
-      이렇게 변함
-      {
-        username: '🔥 dddd. 🔥',
-        email: 'aaaa@gmail.com',
-        password: '1Aa^',
-        confirm_password: '1Aa^'
-      }
-      */
       .refine(checkUsername, 'No potatoes allowed'),
     email: z.string().email().toLowerCase(),
     password: z
@@ -254,21 +342,3 @@ export async function createAccount(prevState: any, formData: FormData) {
     console.log(result.data);
   }
 }
-
-// zod는 데이터를 검증하는 것 뿐만 아니라 변환하는 것도 가능
-
-// .toLowerCase()
-// 유저가 대문자로 입력해도 모든 것을 소문자로 바꿔주는 것
-
-// .trim()
-// 유저가 시작과 끝에 공백을 넣었을 때 string 앞 뒤에 붙은 공백을 제거해줌.
-
-// .transform
-// 커스텀할 수 있음
-// 이 함수는 refine 함수와 동일하게 작동함
-// 이 함수는 반드시 무언가를 return 해야 함
-
-// refine은 네가 refine하려는 대상을 넘겨줌
-// validation의 성공 여부에 따라 true or false를 return 하면 됨
-// transform 역시 네가 transform 하려는 대상을 넘겨줌
-// 여기서는 true or false가 아니라 변환된 값을 return 하면 됨
