@@ -87,3 +87,13 @@ export async function smsLogIn(prevState: ActionState, formData: FormData) {
 }
 
 // 이 initial state는, 이 함수를 최초 호출할 때의 prevState 값이 된다
+// prevState의 초기값이 initial state 이다
+// smsLogIn을 처음 호출했을 때, prevState는
+/* 
+{
+  token: false,
+  error: undefined,
+};
+*/
+// 이것과 같다
+// 그 다음부터 prevState는 내가 return하는 값과 같아진다

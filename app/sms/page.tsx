@@ -141,6 +141,7 @@ export default function SMSLogin() {
             required
             min={100000}
             max={999999}
+            errors={state.error?.formErrors}
           />
         ) : (
           // 유저가 전화번호를 바꾸는 걸 방지하기 위해서 여기에 붙임
