@@ -65,11 +65,60 @@
 // // 사용자가 언제 업데이트 되었는지 알고 싶다
 // // @updatedAt 사용자가 수정될 때마다 Prisma는 사용자의 레코드가 수정된 시간을 updated at 속성에 넣을 것임
 
+// //-----------------------------------------------------
+// // 7-4
+// // Relationships
+// // SMSToken 모델 만들기
+// // 이 모델은 User 모델과 연결 됨. 그리고 SMS 인증을 위해서 사용할 것임
+
+// generator client {
+//   provider = "prisma-client-js"
+// }
+
+// // sqlite을 이용해서 작업하고, Prisma에게 우리 DB 가 어디 있는지 알려주고
+// datasource db {
+//   provider = "sqlite"
+//   url      = env("DATABASE_URL")
+// }
+
+// // 데이터 관점에서, 우리의 사용자가 어떻게 생겼는지 알려줌
+// // 테이블 User - 테이블은 모델이라고도 할 수 있는데 카테고리처럼 네 DB 안에 있는 객체 같은 것
+// model User {
+//   id         Int        @id @default(autoincrement())
+//   username   String     @unique
+//   email      String?    @unique
+//   password   String?
+//   phone      String?    @unique
+//   github_id  String?    @unique
+//   avatar     String? // @default("http://dkdkdkdkdk.com/dkd.jpg") 기본 값 가능
+//   created_at DateTime   @default(now())
+//   updated_at DateTime   @updatedAt
+//   SMSToken   SMSToken[]
+// }
+
+// // 모델 간의 관계를 생성하는 방법
+// // SMSToken이 user도 갖고 있다고 하면 됨
+
+// model SMSToken {
+//   id         Int      @id @default(autoincrement())
+//   token      String   @unique
+//   created_at DateTime @default(now())
+//   updated_at DateTime @updatedAt
+//   user       User     @relation(fields: [userId], references: [id])
+//   userId     Int
+// }
+
+// // 이것들은 사용하지 않더라도 갖고 있는 것이 좋다
+// // id         Int      @id @default(autoincrement())
+// // created_at DateTime @default(now())
+// // updated_at DateTime @updatedAt
+// // user가 없는 SMSToken은 있을 수 없다
+// // user 없이 SMSTocken을 만들 수는 없다
+
 //-----------------------------------------------------
-// 7-4
-// Relationships
-// SMSToken 모델 만들기
-// 이 모델은 User 모델과 연결 됨. 그리고 SMS 인증을 위해서 사용할 것임
+// 7-5
+// onDelete 
+// onDelete 속성을 통해서 서로 연관된 모델이 지워질 때의 동작을 설정할 수 있다
 
 generator client {
   provider = "prisma-client-js"
@@ -104,11 +153,21 @@ model SMSToken {
   token      String   @unique
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
-  user       User     @relation(fields: [userId], references: [id])
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId     Int
 }
 
-// 이것들은 사용하지 않더라도 갖고 있는 것이 좋다
-// id         Int      @id @default(autoincrement())
-// created_at DateTime @default(now())
-// updated_at DateTime @updatedAt
+// Cascade
+// 기본적으로, 사용자가 삭제됐을 때 사용자에게 연결된 모든 SMSToken들도 같이 지워진다는 것을 의미한다
+// 그래서 사용자를 지우려고 한다면, 해당 사용자와 관련된 모든 SMSToken도 삭제 될것임
+
+// SetNull
+// 이건 가능하다면, 사용자가 삭제됐을 때 SMSToken에서 user를 null로 설정하는 것임
+// 이럴 땐 User? Int? 옵셔널로 만들어줘야한다 
+// 따라서 사용자가 그들의 계정을 지우면
+// 그 사용자의 모든 SMSToken들이 userId 를 null로 가지게 될 것임
+
+// Restrict
+// 부모 레코드가 참조되고 있는 동안은 삭제되는 것을 막는다
+// 만약 SMSToken이 사용자와 연결되어 있다면 사용자를 지울 수 없다
+// 그 전에 모든 SMSToken을 삭제해야지만 사용자를 지울 수 있다
