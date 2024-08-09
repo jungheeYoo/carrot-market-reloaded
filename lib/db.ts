@@ -7,6 +7,16 @@
 
 // const db = new PrismaClient();
 
+// async function test() {
+//   const user = await db.user.create({
+//     data: {
+//       username: 'test',
+//     },
+//   });
+//   console.log(user);
+// }
+// test();
+
 // // async function test() {
 // //   const users = await db.user.findMany({
 // //     where: {
