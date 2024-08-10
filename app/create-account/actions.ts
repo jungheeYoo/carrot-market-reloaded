@@ -415,12 +415,135 @@
 //   }
 // }
 
+// //-----------------------------------------------------
+// // 8-1
+// // Database Validation
+// // 사용자가 제출한 email과, username이 데이터베이스에 없는지 확인
+
+// 'use server';
+// import {
+//   PASSWORD_MIN_LENGTH,
+//   PASSWORD_REGEX,
+//   PASSWORD_REGEX_ERROR,
+// } from '@/lib/constants';
+// import db from '@/lib/db';
+// import { z } from 'zod';
+
+// const checkUsername = (username: string) => !username.includes('potato');
+// const checkPasswords = ({
+//   password,
+//   confirm_password,
+// }: {
+//   password: string;
+//   confirm_password: string;
+// }) => password === confirm_password;
+
+// const checkUniqueUsername = async (username: string) => {
+//   // check if username is taken
+//   // 유저네임이 이미 존재하는지 확인
+//   const user = await db.user.findUnique({
+//     where: {
+//       username: username,
+//     },
+//     select: {
+//       id: true,
+//     },
+//   });
+//   // user가 존재하면 에러 보여주기
+//   // show an error
+//   // if (user) {
+//   //   return false;
+//   // } else {
+//   //   return true;
+//   // }
+//   // 위와 같음
+//   // user가 발견되면 이건 truer가 됨
+//   // 찾을 수 없는 경우에는 false가 됨
+//   return !Boolean(user);
+// };
+
+// const checkUniqueEmail = async (email: string) => {
+//   // check if the email is already used
+//   // 이메일을 이미 누가 사용하고 있는지 확인
+//   const user = await db.user.findUnique({
+//     where: {
+//       email: email,
+//     },
+//     select: {
+//       id: true,
+//     },
+//   });
+//   // userEmail이 존재하면 에러 보여주기
+//   // show an error to the userEmail
+//   return !Boolean(user);
+// };
+
+// const formSchema = z
+//   .object({
+//     username: z
+//       .string({
+//         invalid_type_error: 'Username must be a stirng',
+//         required_error: 'Where is my username???',
+//       })
+//       .toLowerCase()
+//       .trim()
+//       // .transform((username) => `🔥 ${username} 🔥`)
+//       .refine(checkUsername, 'No potatoes allowed')
+//       .refine(checkUniqueUsername, 'This username is already taken'),
+//     email: z
+//       .string()
+//       .email()
+//       .toLowerCase()
+//       .refine(
+//         checkUniqueEmail,
+//         'There is an account already registered with that email'
+//       ),
+//     password: z.string().min(PASSWORD_MIN_LENGTH),
+//     // .regex(PASSWORD_REGEX, PASSWORD_REGEX_ERROR),
+//     confirm_password: z.string().min(PASSWORD_MIN_LENGTH),
+//   })
+//   .refine(checkPasswords, {
+//     message: 'Both passwords should be the same!',
+//     path: ['confirm_password'],
+//   });
+
+// export async function createAccount(prevState: any, formData: FormData) {
+//   const data = {
+//     username: formData.get('username'),
+//     email: formData.get('email'),
+//     password: formData.get('password'),
+//     confirm_password: formData.get('confirm_password'),
+//   };
+
+//   // safeParse
+//   // data가 정제되고 변환을 거친 결과
+//   const result = await formSchema.safeParseAsync(data);
+//   if (!result.success) {
+//     console.log(result.error.flatten());
+
+//     return result.error.flatten();
+//   } else {
+//     // hash password
+//     // 비밀번호를 해싱(hashing) 해야 함
+//     // save the user to db
+//     // 사용자를 데이터베이스에 저장
+//     // log the user in
+//     // 사용자가 데이터베이스에 저장되면 사용자를 로그인 시켜줌
+//     // redirect '/home'
+//     // 사용자가 로그인하면 사용자를 /home으로 redirect 시킴
+//   }
+// }
+
+// // select
+// // 데이터베이스에 요청할 데이터를 결정할 수 있음
+
 //-----------------------------------------------------
-// 8-1
-// Database Validation
-// 사용자가 제출한 email과, username이 데이터베이스에 없는지 확인
+// 8-2
+// Password Hashing
+//
 
 'use server';
+import bcrypt from 'bcrypt';
 import {
   PASSWORD_MIN_LENGTH,
   PASSWORD_REGEX,
@@ -525,8 +648,25 @@ export async function createAccount(prevState: any, formData: FormData) {
   } else {
     // hash password
     // 비밀번호를 해싱(hashing) 해야 함
+    const hashedPassword = await bcrypt.hash(result.data.password, 12);
+    console.log(hashedPassword);
+    // 해시 번호 나옴
+    // $2b$12$fTt15b7Ztl8/gkO7bLZqH.D60ifBoNsmOc3Gq5hGKDqCHoCiXLbDO
+
     // save the user to db
     // 사용자를 데이터베이스에 저장
+    const user = await db.user.create({
+      data: {
+        username: result.data.username,
+        email: result.data.email,
+        password: hashedPassword,
+      },
+      select: {
+        id: true,
+      },
+    });
+    console.log(user);
+
     // log the user in
     // 사용자가 데이터베이스에 저장되면 사용자를 로그인 시켜줌
     // redirect '/home'
@@ -534,5 +674,26 @@ export async function createAccount(prevState: any, formData: FormData) {
   }
 }
 
-// select
-// 데이터베이스에 요청할 데이터를 결정할 수 있음
+// 해싱은 기본적으로 유저가 보낸 비밀번호 변환하는 것
+// 해시 함수의 마법은 단방향
+// 똑같은 비밀번호로는 똑같이 생긴 무작위적인 문자열을 얻게 되지만
+// 해시 함수로 생성된 임의의 문자열을 해시 함수에 넣어도
+// 반대 방향으로는 그럴 수 없다
+// 이 무작위적인 결과를 내놓은 시드나 문자열이 무엇인지 알 수 없다
+/* 
+12345 => hashFunction(12345) => 5sdjfhskldfjsd-fg-090
+hashFunction(5sdjfhskldfjsd-fg-090) => 12345
+*/
+
+// const hashedPassword = bcrypt.hash(result.data.password, 12);
+// 여기에서 12는 알고리즘을 얼마나 돌릴지 결정하는 것
+// 왜냐면 해싱을 한 번만 하는 것이 아니라
+// 해싱 알고리즘을 12번 실행한다는 것. 해시의 보안을 강화한다는 의미
+// hash에 마우스를 올리면 Promise 타입인 것을 볼 수 있고
+// Promise가 return 하는 값인 string을 받고 싶다면 await을 붙여줘야 함
+// 데이터베이스 쿼리를 실행했을 때 await 한 것 처럼 이렇게 await 해야 하는 이유는
+// 이 과정이 시간이 좀 걸리기 때문이다
+// 데이터베이스에서 무언가를 찾거나, 문자열을 해싱하는 과정은 시간이 걸림
+// 그래서 await 하는 것이다
+
+// 해싱된 비밀번호도 있으니 사용자를 데이터베이스에 저장해야 함
