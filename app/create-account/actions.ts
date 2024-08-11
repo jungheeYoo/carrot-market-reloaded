@@ -537,10 +537,171 @@
 // // select
 // // 데이터베이스에 요청할 데이터를 결정할 수 있음
 
+// //-----------------------------------------------------
+// // 8-2
+// // Password Hashing
+// //
+
+// 'use server';
+// import bcrypt from 'bcrypt';
+// import {
+//   PASSWORD_MIN_LENGTH,
+//   PASSWORD_REGEX,
+//   PASSWORD_REGEX_ERROR,
+// } from '@/lib/constants';
+// import db from '@/lib/db';
+// import { z } from 'zod';
+
+// const checkUsername = (username: string) => !username.includes('potato');
+// const checkPasswords = ({
+//   password,
+//   confirm_password,
+// }: {
+//   password: string;
+//   confirm_password: string;
+// }) => password === confirm_password;
+
+// const checkUniqueUsername = async (username: string) => {
+//   // check if username is taken
+//   // 유저네임이 이미 존재하는지 확인
+//   const user = await db.user.findUnique({
+//     where: {
+//       username: username,
+//     },
+//     select: {
+//       id: true,
+//     },
+//   });
+//   // user가 존재하면 에러 보여주기
+//   // show an error
+//   // if (user) {
+//   //   return false;
+//   // } else {
+//   //   return true;
+//   // }
+//   // 위와 같음
+//   // user가 발견되면 이건 truer가 됨
+//   // 찾을 수 없는 경우에는 false가 됨
+//   return !Boolean(user);
+// };
+
+// const checkUniqueEmail = async (email: string) => {
+//   // check if the email is already used
+//   // 이메일을 이미 누가 사용하고 있는지 확인
+//   const user = await db.user.findUnique({
+//     where: {
+//       email: email,
+//     },
+//     select: {
+//       id: true,
+//     },
+//   });
+//   // userEmail이 존재하면 에러 보여주기
+//   // show an error to the userEmail
+//   return !Boolean(user);
+// };
+
+// const formSchema = z
+//   .object({
+//     username: z
+//       .string({
+//         invalid_type_error: 'Username must be a stirng',
+//         required_error: 'Where is my username???',
+//       })
+//       .toLowerCase()
+//       .trim()
+//       // .transform((username) => `🔥 ${username} 🔥`)
+//       .refine(checkUsername, 'No potatoes allowed')
+//       .refine(checkUniqueUsername, 'This username is already taken'),
+//     email: z
+//       .string()
+//       .email()
+//       .toLowerCase()
+//       .refine(
+//         checkUniqueEmail,
+//         'There is an account already registered with that email'
+//       ),
+//     password: z.string().min(PASSWORD_MIN_LENGTH),
+//     // .regex(PASSWORD_REGEX, PASSWORD_REGEX_ERROR),
+//     confirm_password: z.string().min(PASSWORD_MIN_LENGTH),
+//   })
+//   .refine(checkPasswords, {
+//     message: 'Both passwords should be the same!',
+//     path: ['confirm_password'],
+//   });
+
+// export async function createAccount(prevState: any, formData: FormData) {
+//   const data = {
+//     username: formData.get('username'),
+//     email: formData.get('email'),
+//     password: formData.get('password'),
+//     confirm_password: formData.get('confirm_password'),
+//   };
+
+//   // safeParse
+//   // data가 정제되고 변환을 거친 결과
+//   const result = await formSchema.safeParseAsync(data);
+//   if (!result.success) {
+//     console.log(result.error.flatten());
+
+//     return result.error.flatten();
+//   } else {
+//     // hash password
+//     // 비밀번호를 해싱(hashing) 해야 함
+//     const hashedPassword = await bcrypt.hash(result.data.password, 12);
+//     console.log(hashedPassword);
+//     // 해시 번호 나옴
+//     // $2b$12$fTt15b7Ztl8/gkO7bLZqH.D60ifBoNsmOc3Gq5hGKDqCHoCiXLbDO
+
+//     // save the user to db
+//     // 사용자를 데이터베이스에 저장
+//     const user = await db.user.create({
+//       data: {
+//         username: result.data.username,
+//         email: result.data.email,
+//         password: hashedPassword,
+//       },
+//       select: {
+//         id: true,
+//       },
+//     });
+//     console.log(user);
+
+//     // log the user in
+//     // 사용자가 데이터베이스에 저장되면 사용자를 로그인 시켜줌
+//     // redirect '/home'
+//     // 사용자가 로그인하면 사용자를 /home으로 redirect 시킴
+//   }
+// }
+
+// // 해싱은 기본적으로 유저가 보낸 비밀번호 변환하는 것
+// // 해시 함수의 마법은 단방향
+// // 똑같은 비밀번호로는 똑같이 생긴 무작위적인 문자열을 얻게 되지만
+// // 해시 함수로 생성된 임의의 문자열을 해시 함수에 넣어도
+// // 반대 방향으로는 그럴 수 없다
+// // 이 무작위적인 결과를 내놓은 시드나 문자열이 무엇인지 알 수 없다
+// /*
+// 12345 => hashFunction(12345) => 5sdjfhskldfjsd-fg-090
+// hashFunction(5sdjfhskldfjsd-fg-090) => 12345
+// */
+
+// // const hashedPassword = bcrypt.hash(result.data.password, 12);
+// // 여기에서 12는 알고리즘을 얼마나 돌릴지 결정하는 것
+// // 왜냐면 해싱을 한 번만 하는 것이 아니라
+// // 해싱 알고리즘을 12번 실행한다는 것. 해시의 보안을 강화한다는 의미
+// // hash에 마우스를 올리면 Promise 타입인 것을 볼 수 있고
+// // Promise가 return 하는 값인 string을 받고 싶다면 await을 붙여줘야 함
+// // 데이터베이스 쿼리를 실행했을 때 await 한 것 처럼 이렇게 await 해야 하는 이유는
+// // 이 과정이 시간이 좀 걸리기 때문이다
+// // 데이터베이스에서 무언가를 찾거나, 문자열을 해싱하는 과정은 시간이 걸림
+// // 그래서 await 하는 것이다
+
+// // 해싱된 비밀번호도 있으니 사용자를 데이터베이스에 저장해야 함
+
 //-----------------------------------------------------
-// 8-2
-// Password Hashing
-//
+// 8-3
+// Iron Session
+// 사용자 로그인 시키기
 
 'use server';
 import bcrypt from 'bcrypt';
@@ -551,6 +712,10 @@ import {
 } from '@/lib/constants';
 import db from '@/lib/db';
 import { z } from 'zod';
+import { Cookie } from 'next/font/google';
+import { getIronSession } from 'iron-session';
+import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
 
 const checkUsername = (username: string) => !username.includes('potato');
 const checkPasswords = ({
@@ -631,6 +796,8 @@ const formSchema = z
   });
 
 export async function createAccount(prevState: any, formData: FormData) {
+  console.log(cookies());
+
   const data = {
     username: formData.get('username'),
     email: formData.get('email'),
@@ -669,31 +836,52 @@ export async function createAccount(prevState: any, formData: FormData) {
 
     // log the user in
     // 사용자가 데이터베이스에 저장되면 사용자를 로그인 시켜줌
+    const cookie = await getIronSession(cookies(), {
+      cookieName: 'delicious-karrot',
+      password: process.env.COOKIE_PASSWORD!,
+    });
+    //@ts-ignore
+    cookie.id = user.id;
+    await cookie.save();
     // redirect '/home'
     // 사용자가 로그인하면 사용자를 /home으로 redirect 시킴
+    redirect('/profile');
   }
 }
 
-// 해싱은 기본적으로 유저가 보낸 비밀번호 변환하는 것
-// 해시 함수의 마법은 단방향
-// 똑같은 비밀번호로는 똑같이 생긴 무작위적인 문자열을 얻게 되지만
-// 해시 함수로 생성된 임의의 문자열을 해시 함수에 넣어도
-// 반대 방향으로는 그럴 수 없다
-// 이 무작위적인 결과를 내놓은 시드나 문자열이 무엇인지 알 수 없다
-/* 
-12345 => hashFunction(12345) => 5sdjfhskldfjsd-fg-090
-hashFunction(5sdjfhskldfjsd-fg-090) => 12345
-*/
+// 사용자 로그인 시키기?
+// 사용자에게 쿠키를 준다는 것, 데이터가 담긴 쿠키 준다
+// 하지만 이 텍스트 데이터 자체를 쿠키에 넣진 않음
+// 왜냐하면 그렇게 할 경우 어떤 사용자가 9를 변경해서 바꿔버릴 수 있다
+// 그럼 바뀐 사용자로 로그인 될 것이고, 이것은 안전하지 않다
+// 그래서 이것을 랜덤텍스트로 변형해야 함
+// 이 무작위적인 것을 쿠키에 담아서 사용자에게 줄 것임
+// 사용자에게 쿠키를 전달하고 나면, 우리가 아무것도 하지 않아도 자동으로
+// 다음에 사용자 브라우저가 request를 보낼 때
+// GET이든, POST든 그다음에 우리 웹사이트에서 무슨 요청을 보내던
+// 브라우저가 자동적으로 해당 쿠키를 서버로 보낸다
+// 우리는 이 쿠키를 사용자에게 주고, 다음에 사용자가 무언가를 한다면
+// 예를 들어 홈페이지로 가거나, 프로필 페이지로 가거나, 채팅페이지나
+// 사용자가 그곳으로 가려고 하면, 브라우저는 우리에게 우리가 사용자에게 줬던 쿠키를 보낸다
+// cookie(sajfldsfjasldfjld) ---> {id:9}
+// 즉, 사용자는 무슨 뜻인지 알지 못하는 이 값을 가지고 와서
+// 우리는 이것을 id:9 이런 형태로 바꿀 수 있다
+// 그러면 우리는 이 페이지로 이동하려는 사람은 id:9번 사용자인 것을 알 수 있다
+// 그럼 id:9번 사용자의 정보를 데이터베이스에서 찾아서 보여줄것임
+// 토큰, 쿠키, 세선 차이 유튜브 영상 보기!
 
-// const hashedPassword = bcrypt.hash(result.data.password, 12);
-// 여기에서 12는 알고리즘을 얼마나 돌릴지 결정하는 것
-// 왜냐면 해싱을 한 번만 하는 것이 아니라
-// 해싱 알고리즘을 12번 실행한다는 것. 해시의 보안을 강화한다는 의미
-// hash에 마우스를 올리면 Promise 타입인 것을 볼 수 있고
-// Promise가 return 하는 값인 string을 받고 싶다면 await을 붙여줘야 함
-// 데이터베이스 쿼리를 실행했을 때 await 한 것 처럼 이렇게 await 해야 하는 이유는
-// 이 과정이 시간이 좀 걸리기 때문이다
-// 데이터베이스에서 무언가를 찾거나, 문자열을 해싱하는 과정은 시간이 걸림
-// 그래서 await 하는 것이다
+// getIronSession은 쿠키 접근 허용이 필요함
+// 나중에 쿠키를 읽거나 설정할 것이기 때문에 getIronSession에 쿠키를 줌
+// Iron Session을 얻으려면 현재 쿠키가 필요함
+// 그리고 초기 설정 해줘야 함
 
-// 해싱된 비밀번호도 있으니 사용자를 데이터베이스에 저장해야 함
+// password: 'process.env.COOKIE_PASSWORD!',
+// ! 은 타입스크립트에게 .env안에 COOKIE_PASSWORD가 무조건 존재한다는 것을 알려주기 위한 것
+// 이 cookie에 우리가 쿠키에 넣고 싶은 정보 저장
+
+// iron session은 delicious-karrot이라는 쿠키를 가져오거나
+// 쿠키를 갖고 있지 않다면 생성해줌
+// cookie.id = user.id; 여기서 우리는 쿠키 안에 정보를 넣고
+// await cookie.save(); 그다음 저장
+// 그럼 iron session 우리가 만든 비밀번호를 써서 이 데이터를 암호화 할 것임
+// 사용자가 쿠키의 정보를 수정할 수 없도록 하는 것
