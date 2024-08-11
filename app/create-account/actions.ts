@@ -886,10 +886,158 @@
 // // 그럼 iron session 우리가 만든 비밀번호를 써서 이 데이터를 암호화 할 것임
 // // 사용자가 쿠키의 정보를 수정할 수 없도록 하는 것
 
+// //-----------------------------------------------------
+// // 8-5
+// // Email Log In
+// // 이메일과 비밀번호로 로그인 하기
+
+// 'use server';
+// import bcrypt from 'bcrypt';
+// import {
+//   PASSWORD_MIN_LENGTH,
+//   PASSWORD_REGEX,
+//   PASSWORD_REGEX_ERROR,
+// } from '@/lib/constants';
+// import db from '@/lib/db';
+// import { z } from 'zod';
+// import { Cookie } from 'next/font/google';
+// import { getIronSession } from 'iron-session';
+// import { cookies } from 'next/headers';
+// import { redirect } from 'next/navigation';
+// import getSession from '@/lib/session';
+
+// const checkUsername = (username: string) => !username.includes('potato');
+// const checkPasswords = ({
+//   password,
+//   confirm_password,
+// }: {
+//   password: string;
+//   confirm_password: string;
+// }) => password === confirm_password;
+
+// const checkUniqueUsername = async (username: string) => {
+//   // check if username is taken
+//   // 유저네임이 이미 존재하는지 확인
+//   const user = await db.user.findUnique({
+//     where: {
+//       username: username,
+//     },
+//     select: {
+//       id: true,
+//     },
+//   });
+//   // user가 존재하면 에러 보여주기
+//   // show an error
+//   // if (user) {
+//   //   return false;
+//   // } else {
+//   //   return true;
+//   // }
+//   // 위와 같음
+//   // user가 발견되면 이건 truer가 됨
+//   // 찾을 수 없는 경우에는 false가 됨
+//   return !Boolean(user);
+// };
+
+// const checkUniqueEmail = async (email: string) => {
+//   // check if the email is already used
+//   // 이메일을 이미 누가 사용하고 있는지 확인
+//   const user = await db.user.findUnique({
+//     where: {
+//       email: email,
+//     },
+//     select: {
+//       id: true,
+//     },
+//   });
+//   // userEmail이 존재하면 에러 보여주기
+//   // show an error to the userEmail
+//   return !Boolean(user);
+// };
+
+// const formSchema = z
+//   .object({
+//     username: z
+//       .string({
+//         invalid_type_error: 'Username must be a stirng',
+//         required_error: 'Where is my username???',
+//       })
+//       .toLowerCase()
+//       .trim()
+//       // .transform((username) => `🔥 ${username} 🔥`)
+//       .refine(checkUsername, 'No potatoes allowed')
+//       .refine(checkUniqueUsername, 'This username is already taken'),
+//     email: z
+//       .string()
+//       .email()
+//       .toLowerCase()
+//       .refine(
+//         checkUniqueEmail,
+//         'There is an account already registered with that email'
+//       ),
+//     password: z.string().min(PASSWORD_MIN_LENGTH),
+//     // .regex(PASSWORD_REGEX, PASSWORD_REGEX_ERROR),
+//     confirm_password: z.string().min(PASSWORD_MIN_LENGTH),
+//   })
+//   .refine(checkPasswords, {
+//     message: 'Both passwords should be the same!',
+//     path: ['confirm_password'],
+//   });
+
+// export async function createAccount(prevState: any, formData: FormData) {
+//   console.log(cookies());
+
+//   const data = {
+//     username: formData.get('username'),
+//     email: formData.get('email'),
+//     password: formData.get('password'),
+//     confirm_password: formData.get('confirm_password'),
+//   };
+
+//   // safeParse
+//   // data가 정제되고 변환을 거친 결과
+//   const result = await formSchema.safeParseAsync(data);
+//   if (!result.success) {
+//     console.log(result.error.flatten());
+
+//     return result.error.flatten();
+//   } else {
+//     // hash password
+//     // 비밀번호를 해싱(hashing) 해야 함
+//     const hashedPassword = await bcrypt.hash(result.data.password, 12);
+//     console.log(hashedPassword);
+//     // 해시 번호 나옴
+//     // $2b$12$fTt15b7Ztl8/gkO7bLZqH.D60ifBoNsmOc3Gq5hGKDqCHoCiXLbDO
+
+//     // save the user to db
+//     // 사용자를 데이터베이스에 저장
+//     const user = await db.user.create({
+//       data: {
+//         username: result.data.username,
+//         email: result.data.email,
+//         password: hashedPassword,
+//       },
+//       select: {
+//         id: true,
+//       },
+//     });
+//     console.log(user);
+
+//     // log the user in
+//     // 사용자가 데이터베이스에 저장되면 사용자를 로그인 시켜줌
+//     const session = await getSession();
+
+//     session.id = user.id;
+//     await session.save();
+//     // redirect '/home'
+//     // 사용자가 로그인하면 사용자를 /home으로 redirect 시킴
+//     redirect('/profile');
+//   }
+// }
+
 //-----------------------------------------------------
-// 8-5
-// Email Log In
-// 이메일과 비밀번호로 로그인 하기
+// 8-6
+// superRefine
 
 'use server';
 import bcrypt from 'bcrypt';
@@ -900,8 +1048,6 @@ import {
 } from '@/lib/constants';
 import db from '@/lib/db';
 import { z } from 'zod';
-import { Cookie } from 'next/font/google';
-import { getIronSession } from 'iron-session';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import getSession from '@/lib/session';
@@ -915,46 +1061,6 @@ const checkPasswords = ({
   confirm_password: string;
 }) => password === confirm_password;
 
-const checkUniqueUsername = async (username: string) => {
-  // check if username is taken
-  // 유저네임이 이미 존재하는지 확인
-  const user = await db.user.findUnique({
-    where: {
-      username: username,
-    },
-    select: {
-      id: true,
-    },
-  });
-  // user가 존재하면 에러 보여주기
-  // show an error
-  // if (user) {
-  //   return false;
-  // } else {
-  //   return true;
-  // }
-  // 위와 같음
-  // user가 발견되면 이건 truer가 됨
-  // 찾을 수 없는 경우에는 false가 됨
-  return !Boolean(user);
-};
-
-const checkUniqueEmail = async (email: string) => {
-  // check if the email is already used
-  // 이메일을 이미 누가 사용하고 있는지 확인
-  const user = await db.user.findUnique({
-    where: {
-      email: email,
-    },
-    select: {
-      id: true,
-    },
-  });
-  // userEmail이 존재하면 에러 보여주기
-  // show an error to the userEmail
-  return !Boolean(user);
-};
-
 const formSchema = z
   .object({
     username: z
@@ -965,19 +1071,51 @@ const formSchema = z
       .toLowerCase()
       .trim()
       // .transform((username) => `🔥 ${username} 🔥`)
-      .refine(checkUsername, 'No potatoes allowed')
-      .refine(checkUniqueUsername, 'This username is already taken'),
-    email: z
-      .string()
-      .email()
-      .toLowerCase()
-      .refine(
-        checkUniqueEmail,
-        'There is an account already registered with that email'
-      ),
+      .refine(checkUsername, 'No potatoes allowed'),
+
+    email: z.string().email().toLowerCase(),
+
     password: z.string().min(PASSWORD_MIN_LENGTH),
     // .regex(PASSWORD_REGEX, PASSWORD_REGEX_ERROR),
     confirm_password: z.string().min(PASSWORD_MIN_LENGTH),
+  })
+  .superRefine(async ({ username }, ctx) => {
+    const user = await db.user.findUnique({
+      where: {
+        username,
+      },
+      select: {
+        id: true,
+      },
+    });
+    if (user) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'This username is already taken',
+        path: ['username'],
+        fatal: true,
+      });
+      return z.NEVER;
+    }
+  })
+  .superRefine(async ({ email }, ctx) => {
+    const user = await db.user.findUnique({
+      where: {
+        email,
+      },
+      select: {
+        id: true,
+      },
+    });
+    if (user) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'This email is already taken',
+        path: ['email'],
+        fatal: true,
+      });
+      return z.NEVER;
+    }
   })
   .refine(checkPasswords, {
     message: 'Both passwords should be the same!',
@@ -999,7 +1137,6 @@ export async function createAccount(prevState: any, formData: FormData) {
   const result = await formSchema.safeParseAsync(data);
   if (!result.success) {
     console.log(result.error.flatten());
-
     return result.error.flatten();
   } else {
     // hash password
