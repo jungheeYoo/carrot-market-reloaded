@@ -1124,7 +1124,7 @@ const formSchema = z
   });
 
 export async function createAccount(prevState: any, formData: FormData) {
-  console.log(cookies());
+  // console.log(cookies());
 
   const data = {
     username: formData.get('username'),
@@ -1137,13 +1137,13 @@ export async function createAccount(prevState: any, formData: FormData) {
   // data가 정제되고 변환을 거친 결과
   const result = await formSchema.safeParseAsync(data);
   if (!result.success) {
-    console.log(result.error.flatten());
+    // console.log(result.error.flatten());
     return result.error.flatten();
   } else {
     // hash password
     // 비밀번호를 해싱(hashing) 해야 함
     const hashedPassword = await bcrypt.hash(result.data.password, 12);
-    console.log(hashedPassword);
+    // console.log(hashedPassword);
     // 해시 번호 나옴
     // $2b$12$fTt15b7Ztl8/gkO7bLZqH.D60ifBoNsmOc3Gq5hGKDqCHoCiXLbDO
 
@@ -1159,7 +1159,7 @@ export async function createAccount(prevState: any, formData: FormData) {
         id: true,
       },
     });
-    console.log(user);
+    // console.log(user);
 
     // log the user in
     // 사용자가 데이터베이스에 저장되면 사용자를 로그인 시켜줌
