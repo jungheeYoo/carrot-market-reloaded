@@ -1,5 +1,5 @@
 // // --------------------------------------------------------
-// // Products
+// // Product Upload
 // // 11-1
 // // Form Action
 
@@ -18,7 +18,7 @@
 // }
 
 // --------------------------------------------------------
-// Products
+// Product Upload
 // 11-2
 // Product Upload
 
@@ -91,3 +91,62 @@ export async function uploadProduct(_: any, formData: FormData) {
     }
   }
 }
+
+// // --------------------------------------------------------
+// // Product Upload
+// // 11-8
+// // RHF Refactor
+
+// // react hook form 과 server action을 함께 사용하는 방법
+// // server action과 zod를 이용한 validation을 통합하는 방법
+
+// 'use server';
+
+// import fs from 'fs/promises';
+// import db from '@/lib/db';
+// import getSession from '@/lib/session';
+// import { redirect } from 'next/navigation';
+// import { productSchema } from './schema';
+
+// export async function uploadProduct(_: any, formData: FormData) {
+//   const data = {
+//     photo: formData.get('photo'),
+//     title: formData.get('title'),
+//     price: formData.get('price'),
+//     description: formData.get('description'),
+//   };
+//   if (data.photo instanceof File) {
+//     const photoData = await data.photo.arrayBuffer(); // 에러남 노드버전 20이상 필요
+//     // console.log(photoData);
+
+//     await fs.appendFile(`./public/${data.photo.name}`, Buffer.from(photoData));
+//     data.photo = `/${data.photo.name}`;
+//   }
+//   const result = productSchema.safeParse(data);
+//   // console.log(data);
+//   if (!result.success) {
+//     return result.error.flatten();
+//   } else {
+//     const session = await getSession();
+//     if (session.id) {
+//       const product = await db.product.create({
+//         data: {
+//           title: result.data.title,
+//           description: result.data.description,
+//           price: result.data.price,
+//           photo: result.data.photo,
+//           user: {
+//             connect: {
+//               id: session.id,
+//             },
+//           },
+//         },
+//         select: {
+//           id: true,
+//         },
+//       });
+//       redirect(`/products/${product.id}`);
+//       //redirect("/products")
+//     }
+//   }
+// }

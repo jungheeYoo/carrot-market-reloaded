@@ -1,5 +1,5 @@
 // // --------------------------------------------------------
-// // Products
+// // Product Upload
 // // 11-0
 // // Introduction
 
@@ -51,7 +51,7 @@
 // // 유저가 업로드하려는 이미지 보여주기
 
 // // --------------------------------------------------------
-// // Products
+// // Product Upload
 // // 11-1
 // // Form Action
 
@@ -142,7 +142,7 @@
 // // 2. 이미지 사이즈가 대략 3-4MB 이하인지 확인
 
 // --------------------------------------------------------
-// Products
+// Product Upload
 // 11-2
 // Product Upload
 
@@ -232,3 +232,104 @@ export default function AddProduct() {
     </div>
   );
 }
+
+// // --------------------------------------------------------
+// // Product Upload
+// // 11-8
+// // RHF Refactor
+
+// // react hook form 과 server action을 함께 사용하는 방법
+// // server action과 zod를 이용한 validation을 통합하는 방법
+
+// 'use client';
+
+// import Button from '@/components/button';
+// import Input from '@/components/input';
+// import { PhotoIcon } from '@heroicons/react/24/solid';
+// import { useState } from 'react';
+// import { uploadProduct } from './actions';
+// import { useFormState } from 'react-dom';
+// import { zodResolver } from '@hookform/resolvers/zod';
+// import { ProductType } from './schema';
+
+// export default function AddProduct() {
+//   const [preview, setPreview] = useState('');
+//   const onImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+//     // console.log(event.target.files);
+//     const {
+//       target: { files },
+//     } = event;
+//     if (!files) {
+//       return;
+//     }
+//     const file = files[0];
+//     // file을 유저에게 실제로 보여주기 API
+//     // URL.createObjectURL()
+//     const url = URL.createObjectURL(file);
+//     // console.log(url); // blob:http://localhost:3000/5139fb2b-4956-4914-b2df-2ca4caec77f1
+//     setPreview(url);
+//   };
+//   const [file, setFile] = useState<File | null>(null);
+//   const {
+//     register,
+//     handleSubmit,
+//     setValue,
+//     formState: { errors },
+//   } = useForm<ProductType>({
+//     resolver: zodResolver(productSchema),
+//   });
+//   return (
+//     <div>
+//       <form action={action} className="p-5 flex flex-col gap-5">
+//         <label
+//           htmlFor="photo"
+//           className="border-2 aspect-square flex items-center justify-center flex-col text-neutral-300 border-neutral-300 rounded-md border-dashed cursor-pointer bg-center bg-cover"
+//           style={{
+//             backgroundImage: `url(${preview})`,
+//           }}
+//         >
+//           {preview === '' ? (
+//             <>
+//               <PhotoIcon className="w-20" />
+//               <div className="text-neutral-400 text-sm">
+//                 사진을 추가해주세요.
+//                 {state?.fieldErrors.photo}
+//               </div>
+//             </>
+//           ) : null}
+//         </label>
+//         <input
+//           onChange={onImageChange}
+//           type="file"
+//           id="photo"
+//           name="photo"
+//           accept="image/*"
+//           className="hidden"
+//         />
+
+//         <Input
+//           required
+//           placeholder="제목"
+//           type="text"
+//           {...register('title')}
+//           errors={[errors.title?.message ?? '']}
+//         />
+//         <Input
+//           name="price"
+//           type="number"
+//           required
+//           placeholder="가격"
+//           errors={state?.fieldErrors.price}
+//         />
+//         <Input
+//           name="description"
+//           type="text"
+//           required
+//           placeholder="자세한 설명"
+//           errors={state?.fieldErrors.description}
+//         />
+//         <Button text="작성 완료" />
+//       </form>
+//     </div>
+//   );
+// }
