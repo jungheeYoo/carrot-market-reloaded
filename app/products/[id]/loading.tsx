@@ -1,8 +1,3 @@
-// --------------------------------------------------------
-// Products
-// 10-4
-// Detail Skeleton
-
 import { PhotoIcon } from '@heroicons/react/24/solid';
 
 export default function Loading() {
