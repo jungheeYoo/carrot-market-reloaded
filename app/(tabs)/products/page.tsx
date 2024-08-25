@@ -262,7 +262,7 @@
 
 // // 데이터를 어떻게 갱신하는지, 데이터를 어떻게 다시 새로고침해주는지
 // // cache안에 있는 데이터를 새로고침 하는 방법에는 세 가지 옵션이 있다
-// // 1. revalidate (갱신)
+// // 1. revalidate (갱신) - 예를 들면 60초 후에 갱신
 
 // import ProductList from '@/components/product-list';
 // import db from '@/lib/db';
@@ -321,9 +321,10 @@
 
 // 데이터를 어떻게 갱신하는지, 데이터를 어떻게 다시 새로고침해주는지
 // cache안에 있는 데이터를 새로고침 하는 방법에는 세 가지 옵션이 있다
-// 2. revalidatePath (특정 경로(Path)) 방법 두 가지
+// 이번엔 두번째, 우리가 요청했을 때 데이터를 새로고침 하는 방법. 두 가지 방법이 있다
+// 2-1. revalidatePath (특정 경로(Path))
 // 첫 번째 방법 URL을 타겟팅한다
-// 'NextJS에게 /home 페이지에와 연결되어있는 모든 데이터를 새로고침 해라'
+// =>'NextJS에게 /home 페이지에와 연결되어있는 모든 데이터를 새로고침 해라'
 
 import ProductList from '@/components/product-list';
 import db from '@/lib/db';

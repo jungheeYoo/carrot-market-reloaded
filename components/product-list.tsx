@@ -293,6 +293,7 @@ export default function ProductList({ initialProducts }: ProductListProps) {
       {products.map((product) => (
         <ListProduct key={product.id} {...product} />
       ))}
+      {/* 무한 스크롤 잠시 주석 처리 */}
       {/* {!isLastPage ? (
         <span
           ref={trigger}
