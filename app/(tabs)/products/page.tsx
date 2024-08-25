@@ -507,3 +507,11 @@ export default async function products() {
     </div>
   );
 }
+
+// --------------------------------------------------------
+// Caching
+// 13-8
+// Recap part One 복습
+
+// next/cache 함수는
+// 연산처리가 많은 계산들이나 데이터베이스 query 같은 것을 cache할 수 있게 해줌
